@@ -869,6 +869,170 @@ void testVideoSequence2()
 	}
 }
 
+void lab6m1()
+{
+	VideoCapture cap("Videos/laboratory.avi"); // off-line video from file
+	//VideoCapture cap(0);	// live video from web cam
+	if (!cap.isOpened()) {
+		printf("Cannot open video capture device.\n");
+		waitKey(0);
+		return;
+	}
+	Mat grayFrame, backgnd, diff;
+
+	Mat edges;
+	Mat frame, dst;
+	char c;
+
+	int nr = -1;
+	const unsigned char Th = 15;
+	const double alpha = 0.05;
+	
+	while (cap.read(frame))
+	{
+		cvtColor(frame, grayFrame, CV_BGR2GRAY);
+		//imshow("source", frame);
+		//imshow("gray", grayFrame);
+		backgnd = Mat::zeros(grayFrame.size(), grayFrame.type());
+		++nr;
+		if (nr == 0){
+			imshow("first frame", grayFrame);
+		}
+		else{
+			imshow("current frame", grayFrame);
+			
+			absdiff(grayFrame, backgnd, diff);
+			imshow("diff", diff);
+			imshow("back", backgnd);
+				dst = grayFrame.clone();
+				for (int i = 0; i < diff.rows; i++){
+					for (int j = 0; j < diff.cols; j++){
+						if (diff.at<uchar>(i, j)>Th)
+							dst.at<uchar>(i, j) = 255;
+					}
+				}
+				
+		}
+		c = cvWaitKey(0);  // waits a key press to advance to the next frame
+		if (c == 27) {
+			// press ESC to exit
+			printf("ESC pressed - capture finished\n");
+			break;  //ESC pressed
+		};
+	}
+}
+
+
+void segmentareObiecteLab6(){
+	Mat frame, gray;
+	Mat backgnd;
+	Mat diff;
+	Mat dst;
+	char c;
+	int frameNum = -1;
+	int method = 0;
+	printf("Alegeti o optiune pentru metoda: 1 / 2 / 3 \n");
+	scanf("%d", &method);
+	// method =
+	// 1 - frame difference
+	// 2 - running average
+	// 3 - running average with selectivity
+	const unsigned char Th = 25;
+	const double alpha = 0.05;
+
+	VideoCapture cap("Videos/laboratory.avi");
+	if (!cap.isOpened()){
+		printf("Cannot open video capture device.\n");
+		exit(1);
+	}
+	for (;;){
+		cap >> frame; // achizitie frame nou
+		if (frame.empty())
+		{
+			printf("End of video file\n");
+			break;
+		}
+
+		++frameNum;
+		if (frameNum == 0)
+			imshow("sursa", frame); // daca este primul cadru se afiseaza doar sursa
+		cvtColor(frame, gray, CV_BGR2GRAY);
+		//Se initializeaza matricea / imaginea destinatie pentru fiecare frame
+		//dst=gray.clone();
+		// sau
+		//
+		dst = Mat::zeros(gray.size(), gray.type());
+		const int channels_gray = gray.channels();
+		//restrictionam utilizarea metodei doar pt. imagini grayscale cu un canal (8 bit / pixel)
+		if (channels_gray > 1)
+			return;
+		if (frameNum > 0) // daca nu este primul cadru
+		{
+
+			absdiff(gray, backgnd, diff);
+			double t = (double)getTickCount();
+
+			if (method == 1){
+				backgnd = gray.clone();
+				for (int i = 0; i < diff.rows; i++){
+					for (int j = 0; j < diff.cols; j++){
+						if (diff.at<uchar>(i, j) > Th){
+							dst.at<uchar>(i, j) = 255;
+						}
+					}
+				}
+			}
+
+			if (method == 2){
+				addWeighted(gray, alpha, backgnd, 1.0 - alpha, 0, backgnd);
+				for (int i = 0; i < diff.rows; i++){
+					for (int j = 0; j < diff.cols; j++){
+						if (diff.at<uchar>(i, j) > Th){
+							dst.at<uchar>(i, j) = 255;
+						}
+					}
+				}
+			}
+
+			if (method == 3){
+				for (int i = 0; i < diff.rows; i++){
+					for (int j = 0; j < diff.cols; j++){
+						if (diff.at<uchar>(i, j) > Th){
+							dst.at<uchar>(i, j) = 255;
+						}
+						else{
+							backgnd.at<uchar>(i, j) = alpha*gray.at<uchar>(i, j) + (1.0 - alpha)*backgnd.at<uchar>(i, j);
+						}
+					}
+				}
+			}
+
+			Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3));
+			erode(dst, dst, element, Point(-1, -1), 2);
+			dilate(dst, dst, element, Point(-1, -1), 2);
+
+			// Get the current time again and compute the time difference [s]
+			t = ((double)getTickCount() - t) / getTickFrequency();
+			// Print (in the console window) the processing time in [ms]
+			printf("%d - %.3f [ms]\n", frameNum, t * 1000);
+
+			imshow("sursa", frame); // show source
+			imshow("dest", dst); // show destination
+
+		}
+		else // daca este primul cadru, modelul de fundal este chiar el
+			backgnd = gray.clone();
+		// Conditia de avansare/terminare in cilului for(;;) de procesare
+		c = cvWaitKey(0); // press any key to advance between frames
+		//for continous play use cvWaitKey( delay > 0)
+		if (c == 27) {
+			// press ESC to exit
+			printf("ESC pressed - playback finished\n");
+			break; //ESC pressed
+		}
+	}
+}
+
 int main()
 {
 	int op;
@@ -893,6 +1057,8 @@ int main()
 		printf(" 14 - refined\n");
 		printf(" 15 - cornerHarris_demo\n");
 		printf(" 16 - test video seq\n");
+		printf(" 17 - difference\n");
+		printf(" 18 - lab6 segmentare obiecte\n");
 		printf(" 0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d",&op);
@@ -946,6 +1112,12 @@ int main()
 				break;
 			case 16:
 				testVideoSequence2();
+				break;
+			case 17:
+				lab6m1();
+				break;
+			case 18:
+				segmentareObiecteLab6();
 				break;
 		}
 	}
