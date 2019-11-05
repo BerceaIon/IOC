@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "common.h"
 #include "Functions.h"
+#include <opencv2/video/tracking.hpp>
 #include <queue>
 using namespace std;
 
@@ -1033,6 +1034,91 @@ void segmentareObiecteLab6(){
 	}
 }
 
+//lab 7
+
+void lab7(){
+	Mat frame, crnt;
+	Mat prev;
+	Mat dst;
+	Mat flow;
+
+	int maxCorners = 100;
+	double qualityLevel = 0.01;
+	double minDistance = 10;
+	int blocksize = 3;
+	bool useHarrisDetector = true;
+	double k = 0.04;
+
+	vector<Point2f> prev_pts;
+	vector<Point2f> crnt_pts;
+	vector<uchar> status;
+
+	vector<float> error;
+
+	Size winSize = Size(21, 21);
+
+	int maxLevel = 3;
+
+	TermCriteria criteria = TermCriteria(TermCriteria::COUNT + TermCriteria::EPS, 20, 0.03);
+	int flags = 0;
+	double minEigThreshold = 1e-4;
+
+	char c;
+	char fname[MAX_PATH];
+	openFileDlg(fname);
+	VideoCapture cap(fname);
+
+	printf("1-HS\n2-LK\n3-PyramidLK\n");
+	int method;
+	scanf("%d", &method);
+
+	int frameNum = -1;
+
+	for (;;){
+		cap >> frame;
+
+		if (frame.empty()){
+			printf("End of video file\n");
+			break;
+		}
+
+		++frameNum;
+
+		cvtColor(frame, crnt, CV_BGR2GRAY);
+		GaussianBlur(crnt, crnt, Size(5, 5), 0.8, 0.8);
+
+		if (frameNum > 0){
+
+			switch (method){
+			case 1:
+				calcOpticalFlowHS(prev, crnt, 0, 0.1, TermCriteria(TermCriteria::MAX_ITER, 16, 0), flow);
+				showFlow("HS", prev, flow, 1, 4, true, true, false);
+				break;
+			case 2:
+				calcOpticalFlowLK(prev, crnt, Size(15, 15), flow);
+				showFlow("LK", prev, flow, 1, 4, true, true, false);
+				break;
+			case 3:
+				goodFeaturesToTrack(prev, prev_pts, maxCorners, qualityLevel, minDistance, Mat(), blocksize, useHarrisDetector, k);
+				calcOpticalFlowPyrLK(prev, crnt, prev_pts, crnt_pts, status, error, winSize, maxLevel, criteria);
+				showFlowSparse("PyrLK", prev, prev_pts, crnt_pts, status, error, 2, true, true, true);
+				break;
+			}
+		}
+
+		c = cvWaitKey(0);
+
+		prev = crnt.clone();
+
+
+
+		if (c == 27){
+			printf("ESC pressed");
+			break;
+		}
+	}
+}
+
 int main()
 {
 	int op;
@@ -1059,6 +1145,7 @@ int main()
 		printf(" 16 - test video seq\n");
 		printf(" 17 - difference\n");
 		printf(" 18 - lab6 segmentare obiecte\n");
+		printf(" 19 - lab7\n");
 		printf(" 0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d",&op);
@@ -1118,6 +1205,9 @@ int main()
 				break;
 			case 18:
 				segmentareObiecteLab6();
+				break;
+			case 19:
+				lab7();
 				break;
 		}
 	}

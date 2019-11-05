@@ -1,14 +1,14 @@
-﻿Build started 29.10.2019 12:41:53.
+﻿Build started 05.11.2019 11:56:11.
      1>Project "C:\Users\Ionut\Desktop\IOC GITHUB\IOC\OpenCVApplication-VS2013_2413_basic_IOM\OpenCVApplication.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /IOpenCV/Include /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _CRT_SECURE_NO_WARNINGS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\OpenCVApplication.pch" /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt OpenCVApplication.cpp
          OpenCVApplication.cpp
-     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(260): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
-     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(556): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(691): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(726): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(831): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(1004): warning C4244: '=' : conversion from 'const double' to 'uchar', possible loss of data
+     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(261): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(557): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(692): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(727): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(832): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ionut\desktop\ioc github\ioc\opencvapplication-vs2013_2413_basic_iom\opencvapplication.cpp(1005): warning C4244: '=' : conversion from 'const double' to 'uchar', possible loss of data
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Ionut\Desktop\IOC GITHUB\IOC\OpenCVApplication-VS2013_2413_basic_IOM\Debug\OpenCVApplication.exe" /INCREMENTAL /NOLOGO /LIBPATH:OpenCV/Lib opencv_calib3d2413d.lib opencv_contrib2413d.lib opencv_core2413d.lib opencv_features2d2413d.lib opencv_flann2413d.lib opencv_gpu2413d.lib opencv_highgui2413d.lib opencv_imgproc2413d.lib opencv_legacy2413d.lib opencv_ml2413d.lib opencv_nonfree2413d.lib opencv_objdetect2413d.lib opencv_ocl2413d.lib opencv_photo2413d.lib opencv_stitching2413d.lib opencv_superres2413d.lib opencv_ts2413d.lib opencv_video2413d.lib opencv_videostab2413d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Ionut\Desktop\IOC GITHUB\IOC\OpenCVApplication-VS2013_2413_basic_IOM\Debug\OpenCVApplication.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Ionut\Desktop\IOC GITHUB\IOC\OpenCVApplication-VS2013_2413_basic_IOM\Debug\OpenCVApplication.lib" /MACHINE:X86 Debug\colorcode.obj
          Debug\common.obj
@@ -43,4 +43,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:02.42
+Time Elapsed 00:00:02.98
