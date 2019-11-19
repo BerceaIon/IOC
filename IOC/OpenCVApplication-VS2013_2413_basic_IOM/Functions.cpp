@@ -476,6 +476,134 @@ void Labeling(const string& name, const Mat& src, bool output_format)
 
 	imshow(name, dst);
 }
+CascadeClassifier face_cascade; // cascade clasifier object for face
+CascadeClassifier eyes_cascade; // cascade clasifier object for eyes
+CascadeClassifier nose_cascade; // cascade clasifier object for face
+CascadeClassifier mouth_cascade; // cascade clasifier object for eyes
 
+void FaceDetectandDisplay(const string& window_name, Mat frame, int minFaceSize, int minEyeSize) {
+
+	std::vector<Rect> faces;
+	Mat frame_gray;
+	cvtColor(frame, frame_gray, CV_BGR2GRAY);
+	equalizeHist(frame_gray, frame_gray);
+	//-- Detect faces
+	face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, Size(minFaceSize, minFaceSize) ); 
+	for (int i = 0; i < faces.size(); i++){
+		// get the center of the face
+		Point center( faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5 );
+		// draw circle around the face
+		ellipse( frame, center, Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0,  360, Scalar( 255, 0, 255 ), 4, 8, 0 );
+
+		Mat faceROI = frame_gray(faces[i]);
+		std::vector<Rect> eyes;
+		//-- In each face (rectangular ROI), detect the eyes
+		minFaceSize = 30;
+		minEyeSize = minFaceSize / 5;
+
+		eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |CV_HAAR_SCALE_IMAGE, Size(minEyeSize, minEyeSize) ); 
+
+		for (int j = 0; j < eyes.size(); j++){
+			// get the center of the eye
+			//atentie la modul in care se calculeaza pozitia absoluta a centrului ochiului
+			// relativa la coltul stanga-sus al imaginii:
+			Point center( faces[i].x + eyes[j].x + eyes[j].width*0.5,  faces[i].y + eyes[j].y + eyes[j].height*0.5 );
+			int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
+			// draw circle around the eye
+			circle( frame, center, radius, Scalar( 255, 0, 0 ), 4, 8, 0 ); 
+		}
+	}
+	imshow(window_name, frame); //-- Show what you got 
+}
+
+
+
+void FaceDetectandDisplayAll(const string& window_name, Mat frame, int minFaceSize, int minEyeSize, vector<Rect> facess){
+	vector<Rect> faces;
+	Mat frame_gray;
+	cvtColor(frame, frame_gray, CV_BGR2GRAY);
+	equalizeHist(frame_gray, frame_gray);
+	//-- Detect faces
+	face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
+		Size(minFaceSize, minFaceSize));
+	for (int i = 0; i < faces.size(); i++)
+	{
+		// get the center of the face
+		Point center(faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5);
+		// draw circle around the face
+		ellipse(frame, center, Size(faces[i].width*0.5, faces[i].height*0.5), 0, 0,
+			360, Scalar(255, 0, 255), 4, 8, 0);
+		Mat faceROI = frame_gray(faces[i]);
+
+		std::vector<Rect> eyes;
+		//-- In each face (rectangular ROI), detect the eyes
+		Rect eyes_rect;
+		eyes_rect.x = faces[i].x;
+		eyes_rect.y = faces[i].y + 0.2*faces[i].height;
+		eyes_rect.width = faces[i].width;
+		eyes_rect.height = 0.35*faces[i].height;
+		Mat eyes_ROI = frame_gray(eyes_rect);
+		minFaceSize = 20;
+		minEyeSize = minFaceSize / 5;
+		eyes_cascade.detectMultiScale(eyes_ROI, eyes, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(minEyeSize, minEyeSize));
+
+
+		for (int j = 0; j < eyes.size(); j++)
+		{
+			eyes[j].x = eyes[j].x + faces[i].x;
+			eyes[j].y = eyes[j].y + faces[i].y + 0.2*faces[i].height;
+
+
+			// get the center of the eye
+			//atentie la modul in care se calculeaza pozitia absoluta a centrului ochiului
+			// relativa la coltul stanga-sus al imaginii:
+			rectangle(frame, eyes[j], Scalar(255, 0, 0), 2, 8, 0);
+			//Point center(faces[i].x + eyes[j].x + eyes[j].width*0.5,
+			//faces[i].y + eyes[j].y + eyes[j].height*0.5);
+			//int radius = cvRound((eyes[j].width + eyes[j].height)*0.25);
+			// draw circle around the eye
+			//circle(frame, center, radius, Scalar(255, 0, 0), 4, 8, 0);
+		}
+
+		std::vector<Rect> nose;
+		Rect nose_rect; //nose is the 40% ... 75% height of the face
+		nose_rect.x = faces[i].x;
+		nose_rect.y = faces[i].y + 0.4*faces[i].height;
+		nose_rect.width = faces[i].width;
+		nose_rect.height = 0.35*faces[i].height;
+		Mat nose_ROI = frame_gray(nose_rect);
+		
+		nose_cascade.detectMultiScale(nose_ROI, nose, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(minEyeSize, minEyeSize));
+
+		for (int j = 0; j < nose.size(); j++)
+		{
+			nose[j].x = nose[j].x + faces[i].x;
+			nose[j].y = nose[j].y + faces[i].y + 0.4*faces[i].height;
+
+			rectangle(frame, nose[j], Scalar(0, 255, 0), 2, 8, 0);
+		}
+
+		std::vector<Rect> mouth;
+		Rect mouth_rect; //mouth is in the 70% ... 99% height of the face
+		mouth_rect.x = faces[i].x;
+		mouth_rect.y = faces[i].y + 0.7*faces[i].height;
+		mouth_rect.width = faces[i].width;
+		mouth_rect.height = 0.29*faces[i].height;
+		Mat mouth_ROI = frame_gray(mouth_rect);
+		minFaceSize = 20;
+		minEyeSize = minFaceSize / 5;
+		mouth_cascade.detectMultiScale(mouth_ROI, mouth, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(minEyeSize, minEyeSize));
+
+		for (int j = 0; j < mouth.size(); j++)
+		{
+			mouth[j].x = mouth[j].x + faces[i].x;
+			mouth[j].y = mouth[j].y + faces[i].y + 0.7*faces[i].height;
+
+			rectangle(frame, mouth[j], Scalar(0, 0, 255), 2, 8, 0);
+		}
+	}
+	facess = faces;
+	imshow(window_name, frame); //-- Show what you got
+}
 
 

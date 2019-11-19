@@ -6,6 +6,8 @@
 #include "Functions.h"
 #include <opencv2/video/tracking.hpp>
 #include <queue>
+#include "opencv2/objdetect/objdetect.hpp" 
+#include "colorcode.h"
 using namespace std;
 
 
@@ -1119,6 +1121,290 @@ void lab7(){
 	}
 }
 
+void analizaMiscariiPeBazaFluxuluiOpticDensFarneback(){
+	makeColorwheel();
+	make_HSI2RGB_LUT();
+	Mat frame, crnt;
+	Mat prev;
+	Mat dst;
+	Mat flow;
+
+	char c;
+	char fname[MAX_PATH];
+	openFileDlg(fname);
+	VideoCapture cap(fname);
+
+	int frameNum = -1;
+
+	for (;;){
+		cap >> frame;
+
+		if (frame.empty()){
+			printf("End of video file\n");
+			break;
+		}
+
+		++frameNum;
+
+		cvtColor(frame, crnt, CV_BGR2GRAY);
+		GaussianBlur(crnt, crnt, Size(5, 5), 0.8, 0.8);
+
+		int winSize = 11;
+
+		if (frameNum > 0){
+			double t = (double)getTickCount();
+			calcOpticalFlowFarneback(prev, crnt, flow, 0.5, 3, winSize, 10, 6, 1.5, 0);
+			showFlowDense("Farneback", prev, flow, 1.0, true);
+			//showFlow("Farneback", prev, flow, 1, 4, true, true, false);
+			t = ((double)getTickCount() - t) / getTickFrequency();
+			printf("%d - %.3f [ms]\n", frameNum, t * 1000);
+		}
+
+		c = cvWaitKey(0);
+
+		prev = crnt.clone();
+
+
+
+		if (c == 27){
+			printf("ESC pressed");
+			break;
+		}
+	}
+}
+
+void analizaMiscariiPeBazaFluxuluiOpticDensMiddleburry(){
+	makeColorwheel();
+	make_HSI2RGB_LUT();
+	Mat frame, crnt;
+	Mat prev;
+	Mat dst;
+	Mat flow;
+
+	char c;
+	char fname[MAX_PATH];
+	openFileDlg(fname);
+	VideoCapture cap(fname);
+
+	int frameNum = -1;
+
+	for (;;){
+		cap >> frame;
+
+		if (frame.empty()){
+			printf("End of video file\n");
+			break;
+		}
+
+		++frameNum;
+
+		cvtColor(frame, crnt, CV_BGR2GRAY);
+		GaussianBlur(crnt, crnt, Size(5, 5), 0.8, 0.8);
+		
+		int winSize = 11;
+		float minVel = 2.5;
+
+		if (frameNum > 0){
+			double t = (double)getTickCount();
+			calcOpticalFlowFarneback(prev, crnt, flow, 0.5, 3, winSize, 10, 6, 1.5, 0);
+			showFlowDense("Middleburry", prev, flow, minVel, true);
+			t = ((double)getTickCount() - t) / getTickFrequency();
+			printf("%d - %.3f [ms]\n", frameNum, t * 1000);
+
+		}
+
+		c = cvWaitKey(0);
+
+		prev = crnt.clone();
+
+
+
+		if (c == 27){
+			printf("ESC pressed");
+			break;
+		}
+	}
+}
+
+void calcululHistogrameiDirectiilorVectorilorDeMiscare(){
+	Mat frame, crnt;
+	Mat prev;
+	Mat dst;
+	Mat flow;
+
+	char c;
+	char fname[MAX_PATH];
+	openFileDlg(fname);
+	VideoCapture cap(fname);
+
+	int frameNum = -1;
+
+	for (;;){
+		cap >> frame;
+
+		if (frame.empty()){
+			printf("End of video file\n");
+			break;
+		}
+
+		++frameNum;
+
+		cvtColor(frame, crnt, CV_BGR2GRAY);
+		GaussianBlur(crnt, crnt, Size(5, 5), 0.8, 0.8);
+		makeColorwheel();
+		make_HSI2RGB_LUT();
+		int winSize = 11;
+		float minVel = 1;
+		int hist_cols = 360;
+		int *hist_dir;
+
+		if (frameNum > 0){
+			double t = (double)getTickCount();
+
+			calcOpticalFlowFarneback(prev, crnt, flow, 0.5, 3, winSize, 10, 6, 1.5, 0);
+
+			hist_dir = new int[hist_cols];
+
+			for (int i = 0; i < hist_cols; i++){
+				hist_dir[i] = 0;
+			}
+
+			for (int i = 0; i < flow.rows; i++){
+				for (int j = 0; j < flow.cols; j++){
+					Point2f f = flow.at<Point2f>(i, j);
+					float dir_rad = PI + atan2(-f.y, -f.x);
+					int dir_deg = dir_rad * 180 / PI;
+					float mod = sqrt(f.x*f.x + f.y*f.y);
+					if (mod >= minVel)
+						hist_dir[dir_deg]++;
+				}
+			}
+			showHistogram("Hist", hist_dir, hist_cols, 200, true);
+			showHistogramDir("HistDir", hist_dir, hist_cols, 200, true);
+
+			showFlowDense("Middleburry", prev, flow, minVel, true);
+
+			t = ((double)getTickCount() - t) / getTickFrequency();
+			printf("%d - %.3f [ms]\n", frameNum, t * 1000);
+
+		}
+
+		c = cvWaitKey(0);
+
+		prev = crnt.clone();
+
+
+
+		if (c == 27){
+			printf("ESC pressed");
+			break;
+		}
+	}
+}
+
+//lab 8 (9) 
+
+extern CascadeClassifier face_cascade;
+extern CascadeClassifier eyes_cascade;
+extern CascadeClassifier nose_cascade;
+extern CascadeClassifier mouth_cascade;
+
+
+
+
+void faceDetectionAll(){
+
+	Mat src, dst;
+	vector<Rect> faces;
+	//String face_cascade_name = "haarcascade_frontalface_alt.xml";
+	String face_cascade_name = "haarcascade_frontalface_alt.xml";
+	String eyes_cascade_name = "haarcascade_eye_tree_eyeglasses.xml";
+	String nose_cascade_name = "haarcascade_mcs_nose.xml";
+	String mouth_cascade_name = "haarcascade_mcs_mouth.xml";
+	// Load the cascades
+	if (!face_cascade.load(face_cascade_name))
+	{
+		printf("Error loading face cascades !\n");
+		return;
+	}
+	if (!eyes_cascade.load(eyes_cascade_name))
+	{
+		printf("Error loading eyes cascades !\n");
+		return;
+	}
+	if (!nose_cascade.load(nose_cascade_name))
+	{
+		printf("Error loading nose cascades !\n");
+		return;
+	}
+	if (!mouth_cascade.load(mouth_cascade_name))
+	{
+		printf("Error loading mouth cascades !\n");
+		return;
+	}
+	char fname[MAX_PATH];
+	while (openFileDlg(fname)){
+		src = imread(fname, CV_LOAD_IMAGE_COLOR);
+		dst = src.clone();
+		int minFaceSize = 30;
+		int minEyeSize = minFaceSize / 5; // conform proprietatilor antropomorfice ale
+
+		FaceDetectandDisplayAll("Dst", dst, minFaceSize, minEyeSize, faces);
+		waitKey(0);
+	}
+
+}
+
+void faceDetectionVideo(){
+	VideoCapture cap(0); // open the default camera
+	if (!cap.isOpened())  // check if we succeeded
+		return;
+
+	String face_cascade_name = "lbpcascade_frontalface.xml";
+
+	// Load the cascades
+	if (!face_cascade.load(face_cascade_name))
+	{
+		printf("Error loading face cascades !\n");
+		return;
+	}
+
+	Mat  frame_gray;
+	namedWindow("camera", 1);
+	for (;;)
+	{
+		std::vector<Rect> faces;
+		Mat frame;
+		cap >> frame; // get a new frame from camera
+		cvtColor(frame, frame_gray, CV_BGR2GRAY);
+		//GaussianBlur(edges, edges, Size(7, 7), 1.5, 1.5);
+		equalizeHist(frame_gray, frame_gray);
+		int minFaceSize = 30;
+		int minEyeSize = minFaceSize / 5;
+		face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
+			Size(minFaceSize, minFaceSize));
+
+		for (int i = 0; i < faces.size(); i++)
+		{
+			// get the center of the face
+			Point center(faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5);
+			// draw circle around the face
+			//ellipse(frame, center, Size(faces[i].width*0.5, faces[i].height*0.5), 0, 0,
+			//360, Scalar(255, 0, 255), 4, 8, 0);
+			Point stanga_sus(faces[i].x, faces[i].y);
+			Point dreapta_jos(faces[i].x + faces[i].height, faces[i].y + faces[i].width);
+
+			rectangle(frame, stanga_sus, dreapta_jos, Scalar(255, 0, 255), 1, 8, 0);
+
+
+		}
+
+		imshow("camera", frame);
+		if (waitKey(30) >= 0)
+			break;
+	}
+}
+
 int main()
 {
 	int op;
@@ -1146,6 +1432,11 @@ int main()
 		printf(" 17 - difference\n");
 		printf(" 18 - lab6 segmentare obiecte\n");
 		printf(" 19 - lab7\n");
+		printf(" 20 - lab8.1\n");
+		printf(" 21 - lab8.2\n");
+		printf(" 22 - lab8 Farneback\n");
+		printf(" 23 - lab9 Facedetection\n");
+		printf(" 24 - lab9 Facedetection video\n");
 		printf(" 0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d",&op);
@@ -1208,6 +1499,21 @@ int main()
 				break;
 			case 19:
 				lab7();
+				break;
+			case 20:
+				analizaMiscariiPeBazaFluxuluiOpticDensFarneback();
+				break;
+			case 21:
+				analizaMiscariiPeBazaFluxuluiOpticDensMiddleburry();
+				break;
+			case 22:
+				calcululHistogrameiDirectiilorVectorilorDeMiscare();
+				break;
+			case 23:
+				faceDetectionAll();
+				break;
+			case 24:
+				faceDetectionVideo();
 				break;
 		}
 	}

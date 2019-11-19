@@ -36,4 +36,6 @@ void DrawCross(Mat& img, Point p, int size, Scalar color, int thickness);
 
 void Labeling(const string& name, const Mat& src, bool output_format);
 
+void FaceDetectandDisplay(const string& window_name, Mat frame, int minFaceSize, int minEyeSize);
 
+void FaceDetectandDisplayAll(const string& window_name, Mat frame, int minFaceSize, int minEyeSize, vector<Rect> facess);
