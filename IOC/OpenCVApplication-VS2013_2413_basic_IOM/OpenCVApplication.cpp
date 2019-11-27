@@ -1405,6 +1405,149 @@ void faceDetectionVideo(){
 	}
 }
 
+//lab 10(9)
+
+void detectieVideoFaceBazataPeClipire(){
+	VideoCapture cap("Videos/test_msv1_short.avi");
+	if (!cap.isOpened()) {
+		printf("Cannot open video capture device.\n");
+		waitKey(0);
+		return;
+	}
+
+	String face_cascade_name = "haarcascade_frontalface_alt.xml";
+
+	// Load the cascades
+	if (!face_cascade.load(face_cascade_name))
+	{
+		printf("Error loading face cascades !\n");
+		return;
+	}
+
+	Mat  gray;
+	Mat frame, crnt; // crntent frames: original (frame) and converted to grayscale (crnt)
+	Mat prev; // previous frame (grayscale)
+	Mat dst; // output image/frame
+	Mat flow; // flow - matrix containing the optical flow vectors/pixel
+
+	char c;
+	Mat backgnd; // background model
+	Mat diff;
+	Mat temp;
+	Mat roi;
+
+	typedef struct {
+		double arie;
+		double xc;
+		double yc;
+	} mylist;
+	vector<mylist> candidates;
+	const unsigned char Th = 15;
+	int frameNum = -1; //crntent frame counter
+	for (;;)
+	{
+		std::vector<Rect> faces;
+		cap >> frame; // get a new frame from camera
+		if (frame.empty())
+		{
+			printf("End of video file\n");
+			break;
+		}
+		++frameNum;
+
+		cvtColor(frame, gray, CV_BGR2GRAY);
+		equalizeHist(gray, gray);
+		dst = Mat::zeros(gray.size(), gray.type());
+
+		const int channels_gray = gray.channels();
+		if (channels_gray > 1)
+			return;
+		int minFaceSize = 30;
+
+
+		if (frameNum > 0) // not the first frame
+		{
+			double t = (double)getTickCount();
+			face_cascade.detectMultiScale(gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE,
+				Size(minFaceSize, minFaceSize));
+			Point stanga_sus(faces[0].x, faces[0].y);
+			Point dreapta_jos(faces[0].x + faces[0].height, faces[0].y + faces[0].width);
+			rectangle(frame, stanga_sus, dreapta_jos, Scalar(255, 0, 255), 1, 8, 0);
+			imshow("frame", frame);
+
+
+			absdiff(gray, backgnd, diff);
+
+			backgnd = gray.clone();
+			for (int i = 0; i < diff.rows; i++){
+				for (int j = 0; j < diff.cols; j++){
+					if (diff.at<uchar>(i, j) > Th){
+						dst.at<uchar>(i, j) = 255;
+					}
+				}
+			}
+			Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3));
+			erode(dst, dst, element, Point(-1, -1), 2);
+			dilate(dst, dst, element, Point(-1, -1), 2);
+
+			temp = dst(faces[0]);
+			dilate(dst, dst, element, Point(-1, -1), 2);
+			erode(dst, dst, element, Point(-1, -1), 2);
+
+			imshow("dest", dst);
+			
+			//etichetare
+			vector<vector<Point> > contours;
+			vector<Vec4i> hierarchy;
+			roi = Mat::zeros(temp.rows, temp.cols, CV_8UC3);
+			findContours(temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+			Moments m;
+
+			if (contours.size() > 0)
+			{
+
+				// iterate through all the top-level contours,
+				// draw each connected component with its own random color
+				int idx = 0;
+				for (; idx >= 0; idx = hierarchy[idx][0])
+				{
+					const vector<Point>& c = contours[idx];
+					m = moments(c); // calcul momente
+
+					double arie = m.m00; // aria componentei conexe idx
+					double xc = m.m10 / m.m00; // coordonata x a CM al componentei conexe idx
+					double yc = m.m01 / m.m00; // coordonata y a CM al componentei conexe idx
+					mylist elem;
+					elem.arie = arie;
+					elem.xc = xc;
+					elem.yc = yc;
+					candidates.push_back(elem);
+					Scalar color(rand() & 255, rand() & 255, rand() & 255);
+					drawContours(roi, contours, idx, color, CV_FILLED, 8, hierarchy);
+				}
+
+			}
+
+			imshow("etichetare", roi);
+			
+			
+			t = ((double)getTickCount() - t) / getTickFrequency();
+			printf("%d - %.3f [ms]\n", frameNum, t * 1000);
+
+
+		}
+		else
+			backgnd = gray.clone();
+		//prev = crnt.clone();
+		c = cvWaitKey(0);
+		if (c == 27) {
+			printf("ESC pressed - playback finished\n\n");
+			break;
+		}
+	}
+
+}
+
 int main()
 {
 	int op;
@@ -1437,6 +1580,7 @@ int main()
 		printf(" 22 - lab8 Farneback\n");
 		printf(" 23 - lab9 Facedetection\n");
 		printf(" 24 - lab9 Facedetection video\n");
+		printf(" 25 - lab10 Facedetection blinking\n");
 		printf(" 0 - Exit\n\n");
 		printf("Option: ");
 		scanf("%d",&op);
@@ -1515,6 +1659,8 @@ int main()
 			case 24:
 				faceDetectionVideo();
 				break;
+			case 25:
+				detectieVideoFaceBazataPeClipire();
 		}
 	}
 	while (op!=0);
